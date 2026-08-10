@@ -1,29 +1,10 @@
 /**
- * Hero Dashboard
- *
- * Shared family dashboard data source for Hero HQ.
- *
- * v0.1.0
- *
- * Designed for:
- *   - Hubitat C-7
- *   - SharpTools
- *   - Fully Kiosk Browser
- *
- * One device represents the entire family.
- * It exposes JSON/string attributes that can be consumed by
- * SharpTools for the shared Hero HQ dashboard.
+ * Hero Dashboard - Hubitat C-7
+ * Shared family dashboard data source for SharpTools/Fully Kiosk.
  */
 
-import groovy.json.JsonOutput
-
 metadata {
-    definition(
-        name: "Hero Dashboard",
-        namespace: "tp546",
-        author: "Tom Prendergast",
-        importUrl: "https://raw.githubusercontent.com/tp546/hero-academy/main/drivers/hero-dashboard.groovy"
-    ) {
+    definition(name: "Hero Dashboard", namespace: "tp546", author: "Tom Prendergast") {
         capability "Initialize"
         capability "Refresh"
 
@@ -34,506 +15,221 @@ metadata {
         attribute "dashboardJson", "string"
         attribute "lastUpdated", "string"
 
-        command "updateFamilyData", [
-            [name: "Family Data", type: "STRING"]
-        ]
-
-        command "setFamilyChallenge", [
-            [name: "Challenge", type: "STRING"]
-        ]
-
-        command "setPendingApprovals", [
-            [name: "Count", type: "NUMBER"]
-        ]
-
+        command "updateFamilyData", [[name: "Family Data", type: "STRING"]]
+        command "setFamilyChallenge", [[name: "Challenge", type: "STRING"]]
+        command "setPendingApprovals", [[name: "Count", type: "NUMBER"]]
         command "refreshDashboard"
     }
 
     preferences {
-        input(
-            name: "enableLogging",
-            type: "bool",
-            title: "Enable logging",
-            defaultValue: true,
-            required: false
-        )
+        input name: "enableLogging", type: "bool", title: "Enable logging", defaultValue: true, required: false
     }
 }
 
-/* -------------------------------------------------------------------------- */
-/* Lifecycle                                                                  */
-/* -------------------------------------------------------------------------- */
-
 def installed() {
-    logInfo("Hero Dashboard installed.")
     initialize()
 }
 
 def updated() {
-    logInfo("Hero Dashboard updated.")
     initialize()
 }
 
 def initialize() {
-    if (state.heroes == null) {
-        state.heroes = [:]
-    }
-
+    if (state.heroes == null) state.heroes = [:]
     if (state.familyChallenge == null) {
-        state.familyChallenge = [
-            title: "Family Hero Challenge",
-            progress: 0,
-            target: 1,
-            status: "Ready"
-        ]
+        state.familyChallenge = [title: "Family Hero Challenge", progress: 0, target: 1, status: "Ready"]
     }
-
-    if (state.pendingApprovals == null) {
-        state.pendingApprovals = 0
-    }
-
+    if (state.pendingApprovals == null) state.pendingApprovals = 0
     updateDashboard()
 }
 
-/* -------------------------------------------------------------------------- */
-/* Refresh                                                                    */
-/* -------------------------------------------------------------------------- */
-
 def refresh() {
-    refreshDashboard()
+    updateDashboard()
 }
 
 def refreshDashboard() {
     updateDashboard()
 }
 
-/* -------------------------------------------------------------------------- */
-/* Family data                                                                */
-/* -------------------------------------------------------------------------- */
-
-/*
- * The parent app calls this method with the current family map.
- *
- * Expected structure:
- *
- * [
- *     zach: [
- *         name: "Zach",
- *         xp: 100,
- *         coins: 50,
- *         level: 2,
- *         heroHearts: 1,
- *         status: "Ready for action"
- *     ],
- *     josh: [...],
- *     charlie: [...]
- * ]
- *
- * The method accepts either a Map or a JSON string.
- */
-def updateFamilyData(def familyData) {
+def updateFamilyData(String familyData) {
     Map data = [:]
-
-    if (familyData instanceof Map) {
-        data = familyData
-    } else if (familyData instanceof String) {
-        try {
-            def parsed = new groovy.json.JsonSlurper().parseText(familyData)
-
-            if (parsed instanceof Map) {
-                data = parsed as Map
-            }
-        } catch (Exception e) {
-            logWarn("Unable to parse family data: ${e.message}")
-            return
-        }
+    try {
+        def parsed = new groovy.json.JsonSlurper().parseText(familyData ?: "{}")
+        if (parsed instanceof Map) data = parsed as Map
+    } catch (Exception e) {
+        logWarn("Unable to parse family data: ${e.message}")
+        return
     }
 
     state.heroes = normalizeHeroes(data)
-
     updateDashboard()
-
-    logInfo(
-        "Family dashboard updated with " +
-        "${state.heroes.size()} hero profiles."
-    )
 }
 
-/* -------------------------------------------------------------------------- */
-/* Family challenge                                                           */
-/* -------------------------------------------------------------------------- */
-
-def setFamilyChallenge(def challenge) {
+def setFamilyChallenge(String challenge) {
     Map value = [:]
-
-    if (challenge instanceof Map) {
-        value = challenge
-    } else if (challenge instanceof String) {
-        try {
-            def parsed = new groovy.json.JsonSlurper().parseText(challenge)
-
-            if (parsed instanceof Map) {
-                value = parsed as Map
-            } else {
-                value = [
-                    title: challenge,
-                    progress: 0,
-                    target: 1,
-                    status: "Active"
-                ]
-            ]
-        } catch (Exception ignored) {
-            value = [
-                title: challenge,
-                progress: 0,
-                target: 1,
-                status: "Active"
-            ]
-        }
+    try {
+        def parsed = new groovy.json.JsonSlurper().parseText(challenge ?: "{}")
+        if (parsed instanceof Map) value = parsed as Map
+    } catch (Exception e) {
+        value = [title: challenge ?: "Family Hero Challenge", progress: 0, target: 1, status: "Active"]
     }
 
     state.familyChallenge = [
         title: value.title ?: "Family Hero Challenge",
-        progress: safeNumber(value.progress),
-        target: Math.max(1, safeNumber(value.target) ?: 1),
+        progress: numberValue(value.progress),
+        target: Math.max(1, numberValue(value.target)),
         status: value.status ?: "Active"
     ]
-
     updateDashboard()
-
-    logInfo("Family challenge updated.")
 }
-
-/* -------------------------------------------------------------------------- */
-/* Pending approvals                                                          */
-/* -------------------------------------------------------------------------- */
 
 def setPendingApprovals(Number count) {
-    Integer value = Math.max(0, safeNumber(count))
-
-    state.pendingApprovals = value
-
-    sendEvent(
-        name: "pendingApprovals",
-        value: value
-    )
-
+    state.pendingApprovals = Math.max(0, numberValue(count))
     updateDashboard()
 }
 
-/* -------------------------------------------------------------------------- */
-/* Dashboard generation                                                       */
-/* -------------------------------------------------------------------------- */
-
-private void updateDashboard() {
+def updateDashboard() {
     Map heroes = state.heroes instanceof Map ? state.heroes : [:]
+    List leaderboard = buildLeaderboard(heroes)
 
     Map dashboard = [
         heroes: heroes,
         familyChallenge: state.familyChallenge ?: [:],
-        pendingApprovals: safeNumber(state.pendingApprovals),
-        leaderboard: buildLeaderboard(heroes),
-        generatedAt: new Date().format(
-            "yyyy-MM-dd'T'HH:mm:ssXXX",
-            location?.timeZone ?: TimeZone.getDefault()
-        )
+        pendingApprovals: numberValue(state.pendingApprovals),
+        leaderboard: leaderboard,
+        generatedAt: new Date().format("yyyy-MM-dd HH:mm:ss")
     ]
 
-    String json = JsonOutput.toJson(dashboard)
-
-    sendEvent(
-        name: "dashboardJson",
-        value: json
-    )
-
-    sendEvent(
-        name: "heroSummary",
-        value: buildHeroSummary(heroes)
-    )
-
-    sendEvent(
-        name: "familyChallenge",
-        value: buildChallengeSummary()
-    )
-
-    sendEvent(
-        name: "leaderboard",
-        value: buildLeaderboardText(heroes)
-    )
-
-    sendEvent(
-        name: "pendingApprovals",
-        value: safeNumber(state.pendingApprovals)
-    )
-
-    sendEvent(
-        name: "lastUpdated",
-        value: new Date().format(
-            "yyyy-MM-dd HH:mm:ss",
-            location?.timeZone ?: TimeZone.getDefault()
-        )
-    )
+    sendEvent(name: "dashboardJson", value: groovy.json.JsonOutput.toJson(dashboard))
+    sendEvent(name: "heroSummary", value: buildHeroSummary(heroes))
+    sendEvent(name: "familyChallenge", value: buildChallengeSummary())
+    sendEvent(name: "leaderboard", value: buildLeaderboardText(heroes))
+    sendEvent(name: "pendingApprovals", value: numberValue(state.pendingApprovals))
+    sendEvent(name: "lastUpdated", value: new Date().format("yyyy-MM-dd HH:mm:ss"))
 }
 
-/* -------------------------------------------------------------------------- */
-/* Hero normalization                                                         */
-/* -------------------------------------------------------------------------- */
-
-private Map normalizeHeroes(Map source) {
+def normalizeHeroes(Map source) {
     Map result = [:]
 
     source.each { key, value ->
-
-        if (!(value instanceof Map)) {
-            return
+        if (value instanceof Map) {
+            String heroKey = key.toString().toLowerCase()
+            result[heroKey] = [
+                name: value.name ?: heroKey.capitalize(),
+                icon: value.icon ?: defaultIcon(heroKey),
+                color: value.color ?: defaultColor(heroKey),
+                xp: numberValue(value.xp),
+                coins: numberValue(value.coins),
+                level: numberValue(value.level) ?: 1,
+                heroHearts: numberValue(value.heroHearts),
+                pendingApprovals: numberValue(value.pendingApprovals),
+                completedToday: numberValue(value.completedToday),
+                currentStreak: numberValue(value.currentStreak),
+                rank: value.rank ?: "",
+                status: value.status ?: "Ready for action"
+            ]
         }
-
-        String heroKey = key.toString().toLowerCase()
-
-        result[heroKey] = [
-            name: value.name ?: heroKey.capitalize(),
-            icon: value.icon ?: defaultIcon(heroKey),
-            color: value.color ?: defaultColor(heroKey),
-
-            xp: safeNumber(value.xp),
-            coins: safeNumber(value.coins),
-            level: safeNumber(value.level) ?: 1,
-
-            heroHearts: safeNumber(value.heroHearts),
-            pendingApprovals: safeNumber(value.pendingApprovals),
-            completedToday: safeNumber(value.completedToday),
-            currentStreak: safeNumber(value.currentStreak),
-
-            rank: value.rank ?: "",
-            status: value.status ?: "Ready for action"
-        ]
     }
 
     return result
 }
 
-/* -------------------------------------------------------------------------- */
-/* Hero summary                                                               */
-/* -------------------------------------------------------------------------- */
+def buildHeroSummary(Map heroes) {
+    if (!heroes || heroes.isEmpty()) return "🦸 Hero HQ • No heroes configured"
 
-private String buildHeroSummary(Map heroes) {
-    if (!heroes || heroes.isEmpty()) {
-        return "🦸 Hero HQ • No heroes configured"
-    }
-
-    List<String> summaries = []
-
+    List parts = []
     orderedHeroKeys(heroes).each { key ->
         Map hero = heroes[key]
-
-        if (!hero) {
-            return
+        if (hero) {
+            parts << "${hero.icon} ${hero.name} • Lv ${hero.level} • ${hero.coins} coins • ${hero.xp} XP"
         }
-
-        String icon = hero.icon ?: defaultIcon(key)
-        String name = hero.name ?: key.capitalize()
-
-        Integer level = safeNumber(hero.level) ?: 1
-        Integer coins = safeNumber(hero.coins)
-        Integer xp = safeNumber(hero.xp)
-
-        summaries << (
-            "${icon} ${name} • " +
-            "Lv ${level} • " +
-            "${coins} coins • " +
-            "${xp} XP"
-        )
     }
-
-    return summaries.join(" | ")
+    return parts.join(" | ")
 }
 
-/* -------------------------------------------------------------------------- */
-/* Leaderboard                                                                */
-/* -------------------------------------------------------------------------- */
-
-private List buildLeaderboard(Map heroes) {
-    if (!heroes || heroes.isEmpty()) {
-        return []
-    }
-
+def buildLeaderboard(Map heroes) {
     List entries = []
-
     heroes.each { key, hero ->
-        if (!(hero instanceof Map)) {
-            return
+        if (hero instanceof Map) {
+            entries << [
+                key: key,
+                name: hero.name ?: key.toString().capitalize(),
+                icon: hero.icon ?: defaultIcon(key.toString()),
+                xp: numberValue(hero.xp),
+                coins: numberValue(hero.coins),
+                level: numberValue(hero.level) ?: 1
+            ]
         }
-
-        entries << [
-            key: key,
-            name: hero.name ?: key.capitalize(),
-            icon: hero.icon ?: defaultIcon(key),
-            xp: safeNumber(hero.xp),
-            coins: safeNumber(hero.coins),
-            level: safeNumber(hero.level) ?: 1
-        ]
     }
 
     entries.sort { a, b ->
-        if (a.xp != b.xp) {
-            return b.xp <=> a.xp
-        }
-
+        if (a.xp != b.xp) return b.xp <=> a.xp
         return b.level <=> a.level
     }
 
-    entries.eachWithIndex { entry, index ->
-        entry.rank = index + 1
-    }
-
+    Integer position = 1
+    entries.each { it.rank = position++ }
     return entries
 }
 
-private String buildLeaderboardText(Map heroes) {
+def buildLeaderboardText(Map heroes) {
     List leaderboard = buildLeaderboard(heroes)
+    if (!leaderboard) return "🏆 No heroes yet"
 
-    if (!leaderboard) {
-        return "🏆 No heroes yet"
-    }
-
-    List<String> lines = []
-
+    List lines = []
     leaderboard.each { hero ->
-        String medal
-
-        switch (hero.rank) {
-            case 1:
-                medal = "🥇"
-                break
-
-            case 2:
-                medal = "🥈"
-                break
-
-            case 3:
-                medal = "🥉"
-                break
-
-            default:
-                medal = "${hero.rank}."
-                break
-        }
-
-        lines << (
-            "${medal} ${hero.icon} ${hero.name} " +
-            "• Lv ${hero.level} • ${hero.xp} XP"
-        )
+        String marker = hero.rank == 1 ? "🥇" : hero.rank == 2 ? "🥈" : hero.rank == 3 ? "🥉" : "${hero.rank}."
+        lines << "${marker} ${hero.icon} ${hero.name} • Lv ${hero.level} • ${hero.xp} XP"
     }
-
     return lines.join(" | ")
 }
 
-/* -------------------------------------------------------------------------- */
-/* Family challenge display                                                   */
-/* -------------------------------------------------------------------------- */
-
-private String buildChallengeSummary() {
+def buildChallengeSummary() {
     Map challenge = state.familyChallenge ?: [:]
-
-    String title = challenge.title ?: "Family Hero Challenge"
-
-    Integer progress = safeNumber(challenge.progress)
-    Integer target = Math.max(1, safeNumber(challenge.target) ?: 1)
-
-    String status = challenge.status ?: "Active"
-
-    Integer percent = Math.min(
-        100,
-        Math.round((progress * 100.0) / target)
-    )
-
-    return "🎯 ${title} • ${progress}/${target} • ${percent}% • ${status}"
+    Integer progress = numberValue(challenge.progress)
+    Integer target = Math.max(1, numberValue(challenge.target))
+    Integer percent = Math.min(100, Math.round((progress * 100.0) / target))
+    return "🎯 ${challenge.title ?: 'Family Hero Challenge'} • ${progress}/${target} • ${percent}% • ${challenge.status ?: 'Active'}"
 }
 
-/* -------------------------------------------------------------------------- */
-/* Dashboard helpers                                                          */
-/* -------------------------------------------------------------------------- */
-
-private List<String> orderedHeroKeys(Map heroes) {
-    List<String> order = [
-        "zach",
-        "josh",
-        "charlie"
-    ]
-
-    List<String> result = []
-
-    order.each { key ->
-        if (heroes.containsKey(key)) {
-            result << key
-        }
+def orderedHeroKeys(Map heroes) {
+    List result = []
+    ["zach", "josh", "charlie"].each { key ->
+        if (heroes.containsKey(key)) result << key
     }
-
     heroes.keySet().each { key ->
         String normalized = key.toString().toLowerCase()
-
-        if (!result.contains(normalized)) {
-            result << normalized
-        }
+        if (!result.contains(normalized)) result << normalized
     }
-
     return result
 }
 
-private String defaultIcon(String key) {
-    switch (key?.toLowerCase()) {
-        case "zach":
-            return "🔥"
-
-        case "josh":
-            return "⚡"
-
-        case "charlie":
-            return "🌟"
-
-        default:
-            return "🦸"
-    }
+def defaultIcon(String key) {
+    if (key == "zach") return "🔥"
+    if (key == "josh") return "⚡"
+    if (key == "charlie") return "🌟"
+    return "🦸"
 }
 
-private String defaultColor(String key) {
-    switch (key?.toLowerCase()) {
-        case "zach":
-            return "blue"
-
-        case "josh":
-            return "green"
-
-        case "charlie":
-            return "yellow"
-
-        default:
-            return "blue"
-    }
+def defaultColor(String key) {
+    if (key == "zach") return "blue"
+    if (key == "josh") return "green"
+    if (key == "charlie") return "yellow"
+    return "blue"
 }
 
-private Integer safeNumber(def value) {
-    if (value == null) {
-        return 0
-    }
-
+def numberValue(def value) {
     try {
-        return value as Integer
-    } catch (Exception ignored) {
+        return value == null ? 0 : value as Integer
+    } catch (Exception e) {
         return 0
     }
 }
 
-/* -------------------------------------------------------------------------- */
-/* Logging                                                                    */
-/* -------------------------------------------------------------------------- */
-
-private void logInfo(String message) {
-    if (settings.enableLogging != false) {
-        log.info "Hero Dashboard: ${message}"
-    }
+def logInfo(String message) {
+    if (settings.enableLogging != false) log.info "Hero Dashboard: ${message}"
 }
 
-private void logWarn(String message) {
+def logWarn(String message) {
     log.warn "Hero Dashboard: ${message}"
 }
