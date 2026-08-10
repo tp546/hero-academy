@@ -3,15 +3,6 @@
  *
  * v0.1.0
  * Central mission/chore/behavior engine for Hero HQ.
- *
- * This first milestone provides a small, reliable data-driven mission engine:
- *   - Daily household missions
- *   - Positive rewards (XP + coins)
- *   - Negative behavior actions
- *   - Parent approval for child-reported missions
- *   - Shared quick-action commands for all three heroes
- *
- * The app creates one Hero Mission Manager child device.
  */
 
 definition(
@@ -53,6 +44,7 @@ def updated() {
 def initialize() {
     createManagerDevice()
     seedMissions()
+    updateManager()
 }
 
 def createManagerDevice() {
@@ -112,6 +104,7 @@ def completeMission(String heroKey, String missionId) {
 
     if (mission.requiresApproval) {
         addPending(heroKey, missionId)
+        syncPendingCounts()
         updateManager()
         logInfo("${heroKey} submitted ${mission.name} for parent approval.")
         return
@@ -126,11 +119,13 @@ def approveMission(String heroKey, String missionId) {
     if (!hero || !mission) return
 
     removePending(heroKey, missionId)
+    syncPendingCounts()
     applyMission(hero, mission, heroKey)
 }
 
 def rejectMission(String heroKey, String missionId) {
     removePending(heroKey, missionId)
+    syncPendingCounts()
     updateManager()
     logInfo("Rejected ${missionId} for ${heroKey}.")
 }
@@ -144,8 +139,9 @@ def applyMission(def hero, Map mission, String heroKey) {
         else if (mission.coins < 0) hero.deductCoins(Math.abs(mission.coins), mission.name)
 
         Integer completed = numberValue(hero.currentValue("completedToday"))
-        hero.setCompletedToday(completed + (mission.xp > 0 ? 1 : 0))
+        if (mission.xp > 0) hero.setCompletedToday(completed + 1)
 
+        syncPendingCounts()
         updateManager()
         logInfo("Applied ${mission.name} to ${heroKey}.")
     } catch (Exception e) {
@@ -155,7 +151,8 @@ def applyMission(def hero, Map mission, String heroKey) {
 
 def addPending(String heroKey, String missionId) {
     if (state.pending == null) state.pending = []
-    state.pending << [hero: heroKey.toLowerCase(), mission: missionId]
+    Boolean exists = state.pending.any { it.hero == heroKey.toLowerCase() && it.mission == missionId }
+    if (!exists) state.pending << [hero: heroKey.toLowerCase(), mission: missionId]
 }
 
 def removePending(String heroKey, String missionId) {
@@ -163,11 +160,20 @@ def removePending(String heroKey, String missionId) {
     state.pending = state.pending.findAll { !(it.hero == heroKey.toLowerCase() && it.mission == missionId) }
 }
 
+def syncPendingCounts() {
+    Map counts = [zach: 0, josh: 0, charlie: 0]
+    (state.pending ?: []).each { item ->
+        String key = item.hero?.toString()?.toLowerCase()
+        if (counts.containsKey(key)) counts[key] = counts[key] + 1
+    }
+    if (settings.zach) settings.zach.setPendingApprovals(counts.zach)
+    if (settings.josh) settings.josh.setPendingApprovals(counts.josh)
+    if (settings.charlie) settings.charlie.setPendingApprovals(counts.charlie)
+}
+
 def updateManager() {
     def device = getChildDevice("${app.id}-manager")
     if (!device) return
-
-    Integer pending = state.pending instanceof List ? state.pending.size() : 0
     device.updateData(buildDashboardData())
 }
 
