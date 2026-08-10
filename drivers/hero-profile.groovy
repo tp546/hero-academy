@@ -694,4 +694,4 @@ private void logWarn(String message) {
  * immediately understand the progression system. We can move the
  * scoring rules into a shared library once missions are implemented.
  */
-private static final Integer XP_PER_LEVEL = 100
+def XP_PER_LEVEL = 100
