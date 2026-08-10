@@ -1,9 +1,6 @@
 /**
  * Hero Mission Manager Driver
- *
  * Shared command/data device used by the Hero Mission Manager app.
- *
- * v0.1.0
  */
 
 metadata {
@@ -45,6 +42,7 @@ def initialize() {
 }
 
 def refresh() {
+    parent?.updateManager()
     updateAttributes()
 }
 
@@ -54,42 +52,62 @@ def updateData(String data) {
 }
 
 def completeMission(String hero, String mission) {
-    logInfo("Mission completion requested: ${hero}/${mission}")
-    sendEvent(name: "status", value: "Mission submitted")
+    parent?.completeMission(hero, mission)
 }
 
 def approveMission(String hero, String mission) {
-    logInfo("Mission approval requested: ${hero}/${mission}")
-    sendEvent(name: "status", value: "Mission approved")
+    parent?.approveMission(hero, mission)
 }
 
 def rejectMission(String hero, String mission) {
-    logInfo("Mission rejection requested: ${hero}/${mission}")
-    sendEvent(name: "status", value: "Mission rejected")
+    parent?.rejectMission(hero, mission)
 }
 
 def zachAward(Number coins, Number xp, String reason) {
-    logInfo("Quick award Zach: ${coins} coins / ${xp} XP / ${reason}")
+    def hero = parent?.getHero("zach")
+    if (hero) {
+        if (xp > 0) hero.awardXp(xp, reason ?: "Quick award")
+        if (coins > 0) hero.awardCoins(coins, reason ?: "Quick award")
+        parent?.updateManager()
+    }
 }
 
 def joshAward(Number coins, Number xp, String reason) {
-    logInfo("Quick award Josh: ${coins} coins / ${xp} XP / ${reason}")
+    def hero = parent?.getHero("josh")
+    if (hero) {
+        if (xp > 0) hero.awardXp(xp, reason ?: "Quick award")
+        if (coins > 0) hero.awardCoins(coins, reason ?: "Quick award")
+        parent?.updateManager()
+    }
 }
 
 def charlieAward(Number coins, Number xp, String reason) {
-    logInfo("Quick award Charlie: ${coins} coins / ${xp} XP / ${reason}")
+    def hero = parent?.getHero("charlie")
+    if (hero) {
+        if (xp > 0) hero.awardXp(xp, reason ?: "Quick award")
+        if (coins > 0) hero.awardCoins(coins, reason ?: "Quick award")
+        parent?.updateManager()
+    }
 }
 
 def zachBehavior(Number coins, String reason) {
-    logInfo("Quick behavior Zach: -${coins} coins / ${reason}")
+    applyBehavior("zach", coins, reason)
 }
 
 def joshBehavior(Number coins, String reason) {
-    logInfo("Quick behavior Josh: -${coins} coins / ${reason}")
+    applyBehavior("josh", coins, reason)
 }
 
 def charlieBehavior(Number coins, String reason) {
-    logInfo("Quick behavior Charlie: -${coins} coins / ${reason}")
+    applyBehavior("charlie", coins, reason)
+}
+
+def applyBehavior(String heroKey, Number coins, String reason) {
+    def hero = parent?.getHero(heroKey)
+    if (hero && coins > 0) {
+        hero.deductCoins(coins, reason ?: "Behavior")
+        parent?.updateManager()
+    }
 }
 
 def updateAttributes() {
@@ -106,8 +124,4 @@ def updateAttributes() {
     sendEvent(name: "pendingApprovals", value: pending)
     sendEvent(name: "status", value: pending > 0 ? "${pending} approval${pending == 1 ? '' : 's'} pending" : "Ready for action")
     sendEvent(name: "lastUpdated", value: new Date().format("yyyy-MM-dd HH:mm:ss"))
-}
-
-def logInfo(String message) {
-    log.info "Hero Mission Manager: ${message}"
 }
