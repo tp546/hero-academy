@@ -1,8 +1,6 @@
 /**
  * Hero Mission Manager
- *
- * v0.1.0
- * Central mission/chore/behavior engine for Hero HQ.
+ * Central mission, chore, behavior, approval, and family quick-action engine.
  */
 
 definition(
@@ -32,9 +30,7 @@ preferences {
     }
 }
 
-def installed() {
-    initialize()
-}
+def installed() { initialize() }
 
 def updated() {
     unsubscribe()
@@ -49,9 +45,7 @@ def initialize() {
 
 def createManagerDevice() {
     String dni = "${app.id}-manager"
-    def child = getChildDevice(dni)
-    if (child) return
-
+    if (getChildDevice(dni)) return
     try {
         addChildDevice("tp546", "Hero Mission Manager", dni, [
             name: settings.managerName ?: "Hero Mission Manager",
@@ -65,7 +59,6 @@ def createManagerDevice() {
 
 def seedMissions() {
     if (state.missions != null) return
-
     state.missions = [
         clean_up: mission("clean_up", "🧹", "Clean up after yourself", 5, 5, true),
         brush_teeth_am: mission("brush_teeth_am", "🪥", "Brush teeth — morning", 3, 3, true),
@@ -79,12 +72,12 @@ def seedMissions() {
 }
 
 def mission(String id, String icon, String name, Integer xp, Integer coins, Boolean approval) {
-    return [id: id, icon: icon, name: name, xp: xp, coins: coins, requiresApproval: approval]
+    [id: id, icon: icon, name: name, xp: xp, coins: coins, requiresApproval: approval]
 }
 
 def getMission(String missionId) {
     seedMissions()
-    return state.missions[missionId]
+    state.missions[missionId]
 }
 
 def getHero(String heroKey) {
@@ -94,6 +87,22 @@ def getHero(String heroKey) {
         case "josh": return settings.josh
         case "charlie": return settings.charlie
         default: return null
+    }
+}
+
+def quickAction(String heroKey, String action) {
+    String key = heroKey?.toLowerCase()
+    String actionKey = action?.toLowerCase()?.trim()
+    if (!getHero(key) || !getMission(actionKey)) {
+        log.warn "Hero Mission Manager: unknown quick action ${heroKey}/${action}"
+        return
+    }
+
+    def mission = getMission(actionKey)
+    if (mission.requiresApproval) {
+        completeMission(key, actionKey)
+    } else {
+        applyMission(getHero(key), mission, key)
     }
 }
 
@@ -179,7 +188,17 @@ def updateManager() {
 
 def buildDashboardData() {
     seedMissions()
-    return groovy.json.JsonOutput.toJson([
+    groovy.json.JsonOutput.toJson([
+        quickActions: [
+            [id: "clean_up", label: "🧹 Clean up", approval: true],
+            [id: "brush_teeth_am", label: "🪥 Teeth AM", approval: true],
+            [id: "brush_teeth_pm", label: "🪥 Teeth PM", approval: true],
+            [id: "feed_gecko", label: "🦎 Feed gecko", approval: true],
+            [id: "make_bed", label: "🛏️ Make bed", approval: true],
+            [id: "fighting", label: "👊 Fighting", approval: false],
+            [id: "talking_back", label: "🗣️ Talking back", approval: false],
+            [id: "not_listening", label: "👂 Not listening", approval: false]
+        ],
         missions: state.missions,
         pending: state.pending ?: [],
         heroes: [zach: heroSnapshot(settings.zach), josh: heroSnapshot(settings.josh), charlie: heroSnapshot(settings.charlie)]
@@ -188,7 +207,7 @@ def buildDashboardData() {
 
 def heroSnapshot(def hero) {
     if (!hero) return [:]
-    return [
+    [
         name: hero.currentValue("heroName") ?: hero.label,
         xp: numberValue(hero.currentValue("xp")),
         coins: numberValue(hero.currentValue("coins")),
