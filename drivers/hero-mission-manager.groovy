@@ -17,6 +17,7 @@ metadata {
         command "completeMission", [[name: "Hero", type: "STRING"], [name: "Mission", type: "STRING"]]
         command "approveMission", [[name: "Hero", type: "STRING"], [name: "Mission", type: "STRING"]]
         command "rejectMission", [[name: "Hero", type: "STRING"], [name: "Mission", type: "STRING"]]
+        command "quickAction", [[name: "Hero", type: "STRING"], [name: "Action", type: "STRING"]]
 
         command "zachAward", [[name: "Coins", type: "NUMBER"], [name: "XP", type: "NUMBER"], [name: "Reason", type: "STRING"]]
         command "joshAward", [[name: "Coins", type: "NUMBER"], [name: "XP", type: "NUMBER"], [name: "Reason", type: "STRING"]]
@@ -61,6 +62,10 @@ def approveMission(String hero, String mission) {
 
 def rejectMission(String hero, String mission) {
     parent?.rejectMission(hero, mission)
+}
+
+def quickAction(String hero, String action) {
+    parent?.quickAction(hero, action)
 }
 
 def zachAward(Number coins, Number xp, String reason) {
