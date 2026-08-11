@@ -19,6 +19,36 @@ metadata {
         command "rejectMission", [[name: "Hero", type: "STRING"], [name: "Mission", type: "STRING"]]
         command "quickAction", [[name: "Hero", type: "STRING"], [name: "Action", type: "STRING"]]
 
+        // No-argument commands for SharpTools buttons.
+        // These call the same tested quickAction() path, but avoid
+        // requiring SharpTools to supply command parameters.
+        command "zachCleanUp"
+        command "zachBrushTeethAm"
+        command "zachBrushTeethPm"
+        command "zachFeedGecko"
+        command "zachMakeBed"
+        command "zachFighting"
+        command "zachTalkingBack"
+        command "zachNotListening"
+
+        command "joshCleanUp"
+        command "joshBrushTeethAm"
+        command "joshBrushTeethPm"
+        command "joshFeedGecko"
+        command "joshMakeBed"
+        command "joshFighting"
+        command "joshTalkingBack"
+        command "joshNotListening"
+
+        command "charlieCleanUp"
+        command "charlieBrushTeethAm"
+        command "charlieBrushTeethPm"
+        command "charlieFeedGecko"
+        command "charlieMakeBed"
+        command "charlieFighting"
+        command "charlieTalkingBack"
+        command "charlieNotListening"
+
         command "zachAward", [[name: "Coins", type: "NUMBER"], [name: "XP", type: "NUMBER"], [name: "Reason", type: "STRING"]]
         command "joshAward", [[name: "Coins", type: "NUMBER"], [name: "XP", type: "NUMBER"], [name: "Reason", type: "STRING"]]
         command "charlieAward", [[name: "Coins", type: "NUMBER"], [name: "XP", type: "NUMBER"], [name: "Reason", type: "STRING"]]
@@ -67,6 +97,39 @@ def rejectMission(String hero, String mission) {
 def quickAction(String hero, String action) {
     parent?.quickAction(hero, action)
 }
+
+// Zach
+
+def zachCleanUp() { quickAction("zach", "clean_up") }
+def zachBrushTeethAm() { quickAction("zach", "brush_teeth_am") }
+def zachBrushTeethPm() { quickAction("zach", "brush_teeth_pm") }
+def zachFeedGecko() { quickAction("zach", "feed_gecko") }
+def zachMakeBed() { quickAction("zach", "make_bed") }
+def zachFighting() { quickAction("zach", "fighting") }
+def zachTalkingBack() { quickAction("zach", "talking_back") }
+def zachNotListening() { quickAction("zach", "not_listening") }
+
+// Josh
+
+def joshCleanUp() { quickAction("josh", "clean_up") }
+def joshBrushTeethAm() { quickAction("josh", "brush_teeth_am") }
+def joshBrushTeethPm() { quickAction("josh", "brush_teeth_pm") }
+def joshFeedGecko() { quickAction("josh", "feed_gecko") }
+def joshMakeBed() { quickAction("josh", "make_bed") }
+def joshFighting() { quickAction("josh", "fighting") }
+def joshTalkingBack() { quickAction("josh", "talking_back") }
+def joshNotListening() { quickAction("josh", "not_listening") }
+
+// Charlie
+
+def charlieCleanUp() { quickAction("charlie", "clean_up") }
+def charlieBrushTeethAm() { quickAction("charlie", "brush_teeth_am") }
+def charlieBrushTeethPm() { quickAction("charlie", "brush_teeth_pm") }
+def charlieFeedGecko() { quickAction("charlie", "feed_gecko") }
+def charlieMakeBed() { quickAction("charlie", "make_bed") }
+def charlieFighting() { quickAction("charlie", "fighting") }
+def charlieTalkingBack() { quickAction("charlie", "talking_back") }
+def charlieNotListening() { quickAction("charlie", "not_listening") }
 
 def zachAward(Number coins, Number xp, String reason) {
     def hero = parent?.getHero("zach")
