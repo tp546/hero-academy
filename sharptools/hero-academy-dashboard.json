@@ -1,0 +1,63 @@
+{
+  "name": "Hero Academy — Mission Control",
+  "version": "1.0.0",
+  "canvas": { "aspectRatio": "16:9", "orientation": "landscape", "grid": { "columns": 24, "rows": 13 } },
+  "theme": {
+    "background": "#080b10",
+    "panel": "#10151c",
+    "text": "#f4f7fb",
+    "muted": "#9ca7b5",
+    "good": "#63d84a",
+    "danger": "#ff453a",
+    "zach": "#ff3b30",
+    "josh": "#2196ff",
+    "charlie": "#f5c400",
+    "accent": "#9b5cff"
+  },
+  "dataSource": {
+    "hubitatDevice": "Hero Mission Manager",
+    "primaryAttribute": "missionJson",
+    "approvalAttribute": "pendingApprovals",
+    "statusAttribute": "status"
+  },
+  "command": {
+    "name": "quickAction",
+    "arguments": ["Hero", "Action"]
+  },
+  "tiles": [
+    { "id": "header", "type": "label", "x": 0, "y": 0, "w": 7, "h": 2, "title": "🦸 HERO ACADEMY", "subtitle": "MISSION CONTROL" },
+    { "id": "approvals", "type": "attribute", "x": 7, "y": 0, "w": 4, "h": 2, "title": "PARENT APPROVALS", "attribute": "pendingApprovals" },
+    { "id": "coins", "type": "family-summary", "x": 11, "y": 0, "w": 4, "h": 2, "title": "FAMILY COINS" },
+    { "id": "xp", "type": "family-summary", "x": 15, "y": 0, "w": 4, "h": 2, "title": "FAMILY XP" },
+    { "id": "challenge", "type": "family-challenge", "x": 19, "y": 0, "w": 5, "h": 2, "title": "FAMILY CHALLENGE" },
+
+    { "id": "zach", "type": "hero-card", "x": 0, "y": 2, "w": 8, "h": 7, "hero": "zach", "name": "ZACH", "color": "#ff3b30" },
+    { "id": "josh", "type": "hero-card", "x": 8, "y": 2, "w": 8, "h": 7, "hero": "josh", "name": "JOSH", "color": "#2196ff" },
+    { "id": "charlie", "type": "hero-card", "x": 16, "y": 2, "w": 8, "h": 7, "hero": "charlie", "name": "CHARLIE", "color": "#f5c400" },
+
+    { "id": "approvals-list", "type": "approval-list", "x": 0, "y": 9, "w": 8, "h": 3, "title": "PARENT APPROVALS" },
+    { "id": "leaderboard", "type": "leaderboard", "x": 8, "y": 9, "w": 8, "h": 3, "title": "LEADERBOARD (XP)" },
+    { "id": "family-challenge", "type": "family-challenge", "x": 16, "y": 9, "w": 8, "h": 3, "title": "FAMILY CHALLENGE" }
+  ],
+  "heroCards": {
+    "positiveActions": [
+      { "id": "clean_up", "label": "CLEAN UP", "icon": "🧹", "reward": "+5 🪙  +5 XP", "requiresApproval": true },
+      { "id": "brush_teeth_am", "label": "TEETH AM", "icon": "🪥", "reward": "+3 🪙  +3 XP", "requiresApproval": true },
+      { "id": "brush_teeth_pm", "label": "TEETH PM", "icon": "🪥", "reward": "+3 🪙  +3 XP", "requiresApproval": true },
+      { "id": "feed_gecko", "label": "FEED GECKO", "icon": "🦎", "reward": "+5 🪙  +5 XP", "requiresApproval": true },
+      { "id": "make_bed", "label": "MAKE BED", "icon": "🛏️", "reward": "+3 🪙  +3 XP", "requiresApproval": true }
+    ],
+    "negativeActions": [
+      { "id": "fighting", "label": "FIGHTING", "icon": "👊", "penalty": "-5 🪙  -5 XP", "requiresApproval": false },
+      { "id": "talking_back", "label": "TALKING BACK", "icon": "🗣️", "penalty": "-5 🪙  -5 XP", "requiresApproval": false },
+      { "id": "not_listening", "label": "NOT LISTENING", "icon": "👂", "penalty": "-5 🪙  -5 XP", "requiresApproval": false }
+    ]
+  },
+  "heroArgumentValues": { "zach": "zach", "josh": "josh", "charlie": "charlie" },
+  "notes": [
+    "This is a SharpTools build blueprint, not a native SharpTools import file. SharpTools dashboard definitions are account/UI-managed rather than portable JSON in the Hubitat integration.",
+    "Every action tile maps to Hero Mission Manager.quickAction(hero, actionId).",
+    "Positive actions create pending approvals; negative behaviors apply immediately.",
+    "Use the supplied 16:9 landscape layout as the target geometry when creating the SharpTools dashboard."
+  ]
+}
