@@ -12,10 +12,6 @@ metadata {
         attribute "pendingApprovals", "number"
         attribute "status", "string"
         attribute "lastUpdated", "string"
-
-        // Individual pending approval slots. These are intentionally short
-        // strings so Home Assistant can expose them as normal sensor states.
-        // Format: hero|mission|name|xp|coins
         (1..10).each { n -> attribute "pending${n}", "string" }
 
         command "updateData", [[name: "Data", type: "STRING"]]
@@ -24,7 +20,6 @@ metadata {
         command "rejectMission", [[name: "Hero", type: "STRING"], [name: "Mission", type: "STRING"]]
         command "quickAction", [[name: "Hero", type: "STRING"], [name: "Action", type: "STRING"]]
 
-        // No-argument commands for SharpTools / Home Assistant buttons.
         command "zachCleanUp"
         command "zachBrushTeethAm"
         command "zachBrushTeethPm"
@@ -52,8 +47,6 @@ metadata {
         command "charlieTalkingBack"
         command "charlieNotListening"
 
-        // Parent approval/rejection buttons. Each operates on the current
-        // item in that pending slot, so no command arguments are required.
         (1..10).each { n ->
             command "approvePending${n}"
             command "rejectPending${n}"
@@ -69,13 +62,8 @@ metadata {
     }
 }
 
-def installed() {
-    initialize()
-}
-
-def updated() {
-    initialize()
-}
+def installed() { initialize() }
+def updated() { initialize() }
 
 def initialize() {
     if (state.data == null) state.data = "{}"
@@ -108,10 +96,6 @@ def quickAction(String hero, String action) {
     parent?.quickAction(hero, action)
 }
 
-// ------------------------------------------------------------
-// Parent approval slots
-// ------------------------------------------------------------
-
 def approvePending(Integer slot) {
     def item = pendingItem(slot)
     if (!item) return
@@ -138,9 +122,6 @@ def pendingItem(Integer slot) {
         return null
     }
 }
-
-// Individual no-argument commands for Home Assistant / SharpTools.
-// These intentionally resolve the slot at execution time.
 
 def approvePending1() { approvePending(1) }
 def approvePending2() { approvePending(2) }
@@ -224,17 +205,9 @@ def charlieAward(Number coins, Number xp, String reason) {
     }
 }
 
-def zachBehavior(Number coins, String reason) {
-    applyBehavior("zach", coins, reason)
-}
-
-def joshBehavior(Number coins, String reason) {
-    applyBehavior("josh", coins, reason)
-}
-
-def charlieBehavior(Number coins, String reason) {
-    applyBehavior("charlie", coins, reason)
-}
+def zachBehavior(Number coins, String reason) { applyBehavior("zach", coins, reason) }
+def joshBehavior(Number coins, String reason) { applyBehavior("josh", coins, reason) }
+def charlieBehavior(Number coins, String reason) { applyBehavior("charlie", coins, reason) }
 
 def applyBehavior(String heroKey, Number coins, String reason) {
     def hero = parent?.getHero(heroKey)
@@ -249,8 +222,10 @@ def updateAttributes() {
 
     Integer pending = 0
     List pendingItems = []
+    def parsed = null
+
     try {
-        def parsed = new groovy.json.JsonSlurper().parseText(state.data ?: "{}")
+        parsed = new groovy.json.JsonSlurper().parseText(state.data ?: "{}")
         if (parsed?.pending instanceof List) {
             pendingItems = parsed.pending
             pending = pendingItems.size()
@@ -264,18 +239,15 @@ def updateAttributes() {
     sendEvent(name: "status", value: pending > 0 ? "${pending} approval${pending == 1 ? '' : 's'} pending" : "Ready for action")
     sendEvent(name: "lastUpdated", value: new Date().format("yyyy-MM-dd HH:mm:ss"))
 
-    // Keep each slot short and human-readable. Home Assistant can expose
-    // these as individual sensor states even when missionJson is too large.
     (1..10).each { n ->
         String value = ""
         Integer index = n - 1
         if (index < pendingItems.size()) {
             def item = pendingItems[index]
             def mission = null
-            try {
-                def parsed = new groovy.json.JsonSlurper().parseText(state.data ?: "{}")
-                mission = parsed?.missions?[(item?.mission?.toString())]
-            } catch (Exception ignored) { }
+            if (parsed?.missions instanceof Map) {
+                mission = parsed.missions.get(item?.mission?.toString())
+            }
 
             String hero = item?.hero?.toString() ?: ""
             String missionId = item?.mission?.toString() ?: ""
