@@ -13,15 +13,18 @@ metadata {
         attribute "status", "string"
         attribute "lastUpdated", "string"
 
+        // Individual pending approval slots. These are intentionally short
+        // strings so Home Assistant can expose them as normal sensor states.
+        // Format: hero|mission|name|xp|coins
+        (1..10).each { n -> attribute "pending${n}", "string" }
+
         command "updateData", [[name: "Data", type: "STRING"]]
         command "completeMission", [[name: "Hero", type: "STRING"], [name: "Mission", type: "STRING"]]
         command "approveMission", [[name: "Hero", type: "STRING"], [name: "Mission", type: "STRING"]]
         command "rejectMission", [[name: "Hero", type: "STRING"], [name: "Mission", type: "STRING"]]
         command "quickAction", [[name: "Hero", type: "STRING"], [name: "Action", type: "STRING"]]
 
-        // No-argument commands for SharpTools buttons.
-        // These call the same tested quickAction() path, but avoid
-        // requiring SharpTools to supply command parameters.
+        // No-argument commands for SharpTools / Home Assistant buttons.
         command "zachCleanUp"
         command "zachBrushTeethAm"
         command "zachBrushTeethPm"
@@ -48,6 +51,13 @@ metadata {
         command "charlieFighting"
         command "charlieTalkingBack"
         command "charlieNotListening"
+
+        // Parent approval/rejection buttons. Each operates on the current
+        // item in that pending slot, so no command arguments are required.
+        (1..10).each { n ->
+            command "approvePending${n}"
+            command "rejectPending${n}"
+        }
 
         command "zachAward", [[name: "Coins", type: "NUMBER"], [name: "XP", type: "NUMBER"], [name: "Reason", type: "STRING"]]
         command "joshAward", [[name: "Coins", type: "NUMBER"], [name: "XP", type: "NUMBER"], [name: "Reason", type: "STRING"]]
@@ -97,6 +107,62 @@ def rejectMission(String hero, String mission) {
 def quickAction(String hero, String action) {
     parent?.quickAction(hero, action)
 }
+
+// ------------------------------------------------------------
+// Parent approval slots
+// ------------------------------------------------------------
+
+def approvePending(Integer slot) {
+    def item = pendingItem(slot)
+    if (!item) return
+    parent?.approveMission(item.hero.toString(), item.mission.toString())
+}
+
+def rejectPending(Integer slot) {
+    def item = pendingItem(slot)
+    if (!item) return
+    parent?.rejectMission(item.hero.toString(), item.mission.toString())
+}
+
+def pendingItem(Integer slot) {
+    if (!state.data) return null
+    try {
+        def parsed = new groovy.json.JsonSlurper().parseText(state.data ?: "{}")
+        def pending = parsed?.pending
+        if (!(pending instanceof List)) return null
+        Integer index = (slot ?: 1) - 1
+        if (index < 0 || index >= pending.size()) return null
+        return pending[index]
+    } catch (Exception e) {
+        log.warn "Hero Mission Manager: unable to read pending slot ${slot}: ${e.message}"
+        return null
+    }
+}
+
+// Individual no-argument commands for Home Assistant / SharpTools.
+// These intentionally resolve the slot at execution time.
+
+def approvePending1() { approvePending(1) }
+def approvePending2() { approvePending(2) }
+def approvePending3() { approvePending(3) }
+def approvePending4() { approvePending(4) }
+def approvePending5() { approvePending(5) }
+def approvePending6() { approvePending(6) }
+def approvePending7() { approvePending(7) }
+def approvePending8() { approvePending(8) }
+def approvePending9() { approvePending(9) }
+def approvePending10() { approvePending(10) }
+
+def rejectPending1() { rejectPending(1) }
+def rejectPending2() { rejectPending(2) }
+def rejectPending3() { rejectPending(3) }
+def rejectPending4() { rejectPending(4) }
+def rejectPending5() { rejectPending(5) }
+def rejectPending6() { rejectPending(6) }
+def rejectPending7() { rejectPending(7) }
+def rejectPending8() { rejectPending(8) }
+def rejectPending9() { rejectPending(9) }
+def rejectPending10() { rejectPending(10) }
 
 // Zach
 
@@ -182,14 +248,42 @@ def updateAttributes() {
     sendEvent(name: "missionJson", value: state.data ?: "{}")
 
     Integer pending = 0
+    List pendingItems = []
     try {
         def parsed = new groovy.json.JsonSlurper().parseText(state.data ?: "{}")
-        if (parsed?.pending instanceof List) pending = parsed.pending.size()
+        if (parsed?.pending instanceof List) {
+            pendingItems = parsed.pending
+            pending = pendingItems.size()
+        }
     } catch (Exception ignored) {
         pending = 0
+        pendingItems = []
     }
 
     sendEvent(name: "pendingApprovals", value: pending)
     sendEvent(name: "status", value: pending > 0 ? "${pending} approval${pending == 1 ? '' : 's'} pending" : "Ready for action")
     sendEvent(name: "lastUpdated", value: new Date().format("yyyy-MM-dd HH:mm:ss"))
+
+    // Keep each slot short and human-readable. Home Assistant can expose
+    // these as individual sensor states even when missionJson is too large.
+    (1..10).each { n ->
+        String value = ""
+        Integer index = n - 1
+        if (index < pendingItems.size()) {
+            def item = pendingItems[index]
+            def mission = null
+            try {
+                def parsed = new groovy.json.JsonSlurper().parseText(state.data ?: "{}")
+                mission = parsed?.missions?[(item?.mission?.toString())]
+            } catch (Exception ignored) { }
+
+            String hero = item?.hero?.toString() ?: ""
+            String missionId = item?.mission?.toString() ?: ""
+            String name = mission?.name?.toString() ?: missionId
+            String xp = mission?.xp?.toString() ?: "0"
+            String coins = mission?.coins?.toString() ?: "0"
+            value = "${hero}|${missionId}|${name}|${xp}|${coins}"
+        }
+        sendEvent(name: "pending${n}", value: value)
+    }
 }
