@@ -56,6 +56,7 @@ metadata {
         command "setCompletedToday", [[name: "Count", type: "NUMBER"]]
         command "setCurrentStreak", [[name: "Days", type: "NUMBER"]]
         command "addActivity", [[name: "Type", type: "STRING"], [name: "Title", type: "STRING"], [name: "XP", type: "NUMBER"], [name: "Coins", type: "NUMBER"], [name: "Reason", type: "STRING"]]
+        command "recordActivity", [[name: "Type", type: "STRING"], [name: "Title", type: "STRING"], [name: "XP", type: "NUMBER"], [name: "Coins", type: "NUMBER"], [name: "Reason", type: "STRING"]]
         command "resetProgress"
         command "refreshDashboard"
     }
@@ -107,6 +108,37 @@ def addActivity(String type, String title, Number xp, Number coins, String reaso
     state.activityLog << [timestamp:new Date().format("yyyy-MM-dd HH:mm:ss"),type:cleanType,title:cleanTitle,xp:numberValue(xp),coins:numberValue(coins),reason:cleanReason]
     if(state.activityLog.size()>100) state.activityLog=state.activityLog.takeRight(100)
     updateAllAttributes()
+}
+
+/**
+ * Records a parent-entered activity and immediately applies its rewards/penalties.
+ * GOOD adds XP/coins; BAD subtracts XP/coins. These entries never enter the
+ * mission approval queue. A positive custom activity also increments Completed Today.
+ */
+def recordActivity(String type, String title, Number xp, Number coins, String reason) {
+    String cleanType=type?.trim()?.toLowerCase() ?: "good"
+    if (!(cleanType in ["good","bad"])) cleanType="good"
+    Integer xpValue=Math.abs(numberValue(xp))
+    Integer coinValue=Math.abs(numberValue(coins))
+    Integer multiplier=(cleanType=="bad") ? -1 : 1
+    state.xp=Math.max(0,numberValue(state.xp)+(xpValue*multiplier))
+    state.coins=Math.max(0,numberValue(state.coins)+(coinValue*multiplier))
+    if(cleanType=="good") state.completedToday=numberValue(state.completedToday)+1
+
+    String cleanTitle=title?.trim() ?: (cleanType=="bad" ? "Behavior" : "Good Deed")
+    String cleanReason=reason?.trim() ?: cleanTitle
+    if (!(state.activityLog instanceof List)) state.activityLog=[]
+    state.activityLog << [
+        timestamp:new Date().format("yyyy-MM-dd HH:mm:ss"),
+        type:cleanType,
+        title:cleanTitle,
+        xp:xpValue*multiplier,
+        coins:coinValue*multiplier,
+        reason:cleanReason
+    ]
+    if(state.activityLog.size()>100) state.activityLog=state.activityLog.takeRight(100)
+    updateAllAttributes()
+    logInfo("${getHeroName()} recorded ${cleanType} activity '${cleanTitle}': ${xpValue*multiplier} XP, ${coinValue*multiplier} coins")
 }
 
 def resetProgress() {
