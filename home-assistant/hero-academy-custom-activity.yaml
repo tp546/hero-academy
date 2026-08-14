@@ -1,7 +1,5 @@
 # Hero Academy — Custom Activity
-#
-# Add this file as a Home Assistant package, or copy its sections into
-# configuration.yaml/scripts.yaml/helpers as appropriate for your setup.
+# Loaded as a Home Assistant package.
 
 input_select:
   hero_custom_child:
@@ -49,41 +47,49 @@ script:
           activity_type: "{{ states('input_select.hero_custom_type') | lower }}"
           description: "{{ states('input_text.hero_custom_description') | trim }}"
           points: "{{ states('input_number.hero_custom_points') | int(0) }}"
+
       - condition: template
-        value_template: "{{ description != '' and points > 0 and child in ['zach','josh','charlie'] and activity_type in ['good','bad'] }}"
-      - service: hubitat.send_command
+        value_template: >-
+          {{ description != '' and points > 0 and child in ['zach','josh','charlie'] and activity_type in ['good','bad'] }}
+
+      # Hubitat's send_command service targets an entity belonging to the
+      # Hero Mission Manager device. The driver command is recordActivity.
+      - action: hubitat.send_command
         data:
-          device_id: 28bdcbd3268d0b65e29acb28363ff783
+          entity: sensor.hero_mission_manager_status
           command: recordActivity
-          command_args:
+          arguments:
             - "{{ child }}"
             - "{{ activity_type }}"
             - "{{ description }}"
             - "{{ points }}"
             - "{{ points }}"
             - "{{ description }}"
+
       - choose:
           - conditions:
               - condition: template
                 value_template: "{{ activity_type == 'good' }}"
             sequence:
-              - service: media_player.play_media
+              - action: media_player.play_media
                 target:
                   entity_id: media_player.upstairs_hallway_upstairs_hallway_tablet
                 data:
                   media_content_type: music
                   media_content_id: /local/hero-academy/sounds/good.mp3
+
           - conditions:
               - condition: template
                 value_template: "{{ activity_type == 'bad' }}"
             sequence:
-              - service: media_player.play_media
+              - action: media_player.play_media
                 target:
                   entity_id: media_player.upstairs_hallway_upstairs_hallway_tablet
                 data:
                   media_content_type: music
                   media_content_id: /local/hero-academy/sounds/bad.mp3
-      - service: input_text.set_value
+
+      - action: input_text.set_value
         target:
           entity_id: input_text.hero_custom_description
         data:
