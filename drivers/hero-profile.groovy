@@ -25,6 +25,15 @@ metadata {
         attribute "heroSummary", "string"
         attribute "dashboardJson", "string"
 
+        // Compact activity attributes for Home Assistant.
+        // Each activity is a small JSON object rather than the full dashboard payload.
+        attribute "activityLogCount", "number"
+        attribute "todayGood", "number"
+        attribute "todayBad", "number"
+        attribute "todayXpEarned", "number"
+        attribute "todayCoinChange", "number"
+        (1..12).each { n -> attribute "activity${n}", "string" }
+
         command "setHeroName", [[name: "Name", type: "STRING"]]
         command "setHeroIcon", [[name: "Icon", type: "STRING"]]
         command "setHeroColor", [[name: "Color", type: "STRING"]]
@@ -199,6 +208,24 @@ def updateAllAttributes() {
     sendEvent(name: "completedToday", value: numberValue(state.completedToday))
     sendEvent(name: "currentStreak", value: numberValue(state.currentStreak), unit: "days")
 
+    // Publish small, HA-friendly activity attributes.
+    List activities = recentActivities(12)
+    Map daySummary = todayActivitySummary()
+    sendEvent(name: "activityLogCount", value: activities.size())
+    sendEvent(name: "todayGood", value: numberValue(daySummary.good))
+    sendEvent(name: "todayBad", value: numberValue(daySummary.bad))
+    sendEvent(name: "todayXpEarned", value: numberValue(daySummary.xpEarned), unit: "XP")
+    sendEvent(name: "todayCoinChange", value: numberValue(daySummary.coinChange), unit: "coins")
+
+    // Always publish all 12 slots so stale entries disappear when the log is reset.
+    (1..12).each { n ->
+        String value = ""
+        if (activities.size() >= n) {
+            value = groovy.json.JsonOutput.toJson(activities[n - 1])
+        }
+        sendEvent(name: "activity${n}", value: value)
+    }
+
     Map summary = [
         name: getHeroName(),
         icon: state.heroIcon ?: "🦸",
@@ -212,8 +239,8 @@ def updateAllAttributes() {
         completedToday: numberValue(state.completedToday),
         currentStreak: numberValue(state.currentStreak),
         status: calculateStatus(),
-        activityLog: recentActivities(12),
-        todaySummary: todayActivitySummary()
+        activityLog: activities,
+        todaySummary: daySummary
     ]
 
     sendEvent(name: "heroSummary", value: "${summary.icon} ${summary.name} • Level ${summary.level} • ${summary.coins} coins • ${summary.xp} XP")
