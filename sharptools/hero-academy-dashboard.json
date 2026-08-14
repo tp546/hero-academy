@@ -1,6 +1,6 @@
 {
   "name": "Hero Academy — Mission Control",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "canvas": { "aspectRatio": "16:9", "orientation": "landscape", "grid": { "columns": 24, "rows": 13 } },
   "theme": {
     "background": "#080b10",
@@ -24,6 +24,13 @@
     "name": "quickAction",
     "arguments": ["Hero", "Action"]
   },
+  "customActivityCommand": {
+    "device": "Hero Mission Manager",
+    "command": "recordActivity",
+    "arguments": ["Hero", "Type", "Title", "XP", "Coins", "Reason"],
+    "goodBehavior": "Type=good; positive XP/Coins; immediate reward; no approval queue",
+    "badBehavior": "Type=bad; positive values are treated as penalties; immediate deduction; no approval queue"
+  },
   "tiles": [
     { "id": "header", "type": "label", "x": 0, "y": 0, "w": 7, "h": 2, "title": "🦸 HERO ACADEMY", "subtitle": "MISSION CONTROL" },
     { "id": "approvals", "type": "attribute", "x": 7, "y": 0, "w": 4, "h": 2, "title": "PARENT APPROVALS", "attribute": "pendingApprovals" },
@@ -35,9 +42,10 @@
     { "id": "josh", "type": "hero-card", "x": 8, "y": 2, "w": 8, "h": 7, "hero": "josh", "name": "JOSH", "color": "#2196ff" },
     { "id": "charlie", "type": "hero-card", "x": 16, "y": 2, "w": 8, "h": 7, "hero": "charlie", "name": "CHARLIE", "color": "#f5c400" },
 
-    { "id": "approvals-list", "type": "approval-list", "x": 0, "y": 9, "w": 8, "h": 3, "title": "PARENT APPROVALS" },
-    { "id": "leaderboard", "type": "leaderboard", "x": 8, "y": 9, "w": 8, "h": 3, "title": "LEADERBOARD (XP)" },
-    { "id": "family-challenge", "type": "family-challenge", "x": 16, "y": 9, "w": 8, "h": 3, "title": "FAMILY CHALLENGE" }
+    { "id": "approvals-list", "type": "approval-list", "x": 0, "y": 9, "w": 6, "h": 4, "title": "PARENT APPROVALS" },
+    { "id": "leaderboard", "type": "leaderboard", "x": 6, "y": 9, "w": 6, "h": 4, "title": "LEADERBOARD (XP)" },
+    { "id": "activity-log", "type": "family-activity-log", "x": 12, "y": 9, "w": 6, "h": 4, "title": "RECENT ACTIVITY", "source": "heroProfile.activity1..activity12" },
+    { "id": "custom-entry", "type": "parent-command-form", "x": 18, "y": 9, "w": 6, "h": 4, "title": "ADD CUSTOM ACTIVITY", "command": "recordActivity", "fields": ["Hero", "Good/Bad", "Description", "XP", "Coins"] }
   ],
   "heroCards": {
     "positiveActions": [
@@ -54,10 +62,17 @@
     ]
   },
   "heroArgumentValues": { "zach": "zach", "josh": "josh", "charlie": "charlie" },
+  "activityLog": {
+    "perHero": ["activity1", "activity2", "activity3", "activity4", "activity5", "activity6", "activity7", "activity8", "activity9", "activity10", "activity11", "activity12"],
+    "display": "timestamp + child + good/bad + title + XP + coins",
+    "retention": 100,
+    "dailySummary": ["todayGood", "todayBad", "todayXpEarned", "todayCoinChange"]
+  },
   "notes": [
     "This is a SharpTools build blueprint, not a native SharpTools import file. SharpTools dashboard definitions are account/UI-managed rather than portable JSON in the Hubitat integration.",
     "Every action tile maps to Hero Mission Manager.quickAction(hero, actionId).",
-    "Positive actions create pending approvals; negative behaviors apply immediately.",
+    "Positive mission actions create pending approvals; negative mission behaviors apply immediately.",
+    "Custom parent activities use Hero Mission Manager.recordActivity(hero, type, title, xp, coins, reason) and bypass the approval queue.",
     "Use the supplied 16:9 landscape layout as the target geometry when creating the SharpTools dashboard."
   ]
 }
