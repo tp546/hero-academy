@@ -2,9 +2,6 @@
 #
 # Add this file as a Home Assistant package, or copy its sections into
 # configuration.yaml/scripts.yaml/helpers as appropriate for your setup.
-#
-# IMPORTANT: replace YOUR_HERO_MISSION_MANAGER_DEVICE_ID below with the
-# Home Assistant device ID for the Hubitat Hero Mission Manager device.
 
 input_select:
   hero_custom_child:
@@ -56,7 +53,7 @@ script:
         value_template: "{{ description != '' and points > 0 and child in ['zach','josh','charlie'] and activity_type in ['good','bad'] }}"
       - service: hubitat.send_command
         data:
-          device_id: YOUR_HERO_MISSION_MANAGER_DEVICE_ID
+          device_id: 28bdcbd3268d0b65e29acb28363ff783
           command: recordActivity
           command_args:
             - "{{ child }}"
