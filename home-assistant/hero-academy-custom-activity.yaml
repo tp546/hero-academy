@@ -1,0 +1,93 @@
+# Hero Academy — Custom Activity
+#
+# Add this file as a Home Assistant package, or copy its sections into
+# configuration.yaml/scripts.yaml/helpers as appropriate for your setup.
+#
+# IMPORTANT: replace YOUR_HERO_MISSION_MANAGER_DEVICE_ID below with the
+# Home Assistant device ID for the Hubitat Hero Mission Manager device.
+
+input_select:
+  hero_custom_child:
+    name: Hero Custom Child
+    options:
+      - Zach
+      - Josh
+      - Charlie
+    initial: Zach
+    icon: mdi:account-child
+
+  hero_custom_type:
+    name: Hero Custom Type
+    options:
+      - Good
+      - Bad
+    initial: Good
+    icon: mdi:thumb-up-down
+
+input_text:
+  hero_custom_description:
+    name: Hero Custom Description
+    max: 100
+    mode: text
+    icon: mdi:text-box-edit
+
+input_number:
+  hero_custom_points:
+    name: Hero Custom Points
+    min: 1
+    max: 100
+    step: 1
+    mode: box
+    initial: 5
+    icon: mdi:star-circle
+
+script:
+  hero_add_custom_activity:
+    alias: Hero Academy — Add Custom Activity
+    mode: queued
+    max: 10
+    sequence:
+      - variables:
+          child: "{{ states('input_select.hero_custom_child') | lower }}"
+          activity_type: "{{ states('input_select.hero_custom_type') | lower }}"
+          description: "{{ states('input_text.hero_custom_description') | trim }}"
+          points: "{{ states('input_number.hero_custom_points') | int(0) }}"
+      - condition: template
+        value_template: "{{ description != '' and points > 0 and child in ['zach','josh','charlie'] and activity_type in ['good','bad'] }}"
+      - service: hubitat.send_command
+        data:
+          device_id: YOUR_HERO_MISSION_MANAGER_DEVICE_ID
+          command: recordActivity
+          command_args:
+            - "{{ child }}"
+            - "{{ activity_type }}"
+            - "{{ description }}"
+            - "{{ points }}"
+            - "{{ points }}"
+            - "{{ description }}"
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ activity_type == 'good' }}"
+            sequence:
+              - service: media_player.play_media
+                target:
+                  entity_id: media_player.upstairs_hallway_upstairs_hallway_tablet
+                data:
+                  media_content_type: music
+                  media_content_id: /local/hero-academy/sounds/good.mp3
+          - conditions:
+              - condition: template
+                value_template: "{{ activity_type == 'bad' }}"
+            sequence:
+              - service: media_player.play_media
+                target:
+                  entity_id: media_player.upstairs_hallway_upstairs_hallway_tablet
+                data:
+                  media_content_type: music
+                  media_content_id: /local/hero-academy/sounds/bad.mp3
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.hero_custom_description
+        data:
+          value: ""
