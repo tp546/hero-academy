@@ -1,6 +1,6 @@
 /**
  * Hero Profile - Hubitat C-7
- * Hero identity, XP, coins, Hero Hearts, and dashboard attributes.
+ * Hero identity, XP, coins, Hero Hearts, activity log, and dashboard attributes.
  */
 
 metadata {
@@ -38,6 +38,7 @@ metadata {
         command "setPendingApprovals", [[name: "Count", type: "NUMBER"]]
         command "setCompletedToday", [[name: "Count", type: "NUMBER"]]
         command "setCurrentStreak", [[name: "Days", type: "NUMBER"]]
+        command "addActivity", [[name: "Type", type: "STRING"], [name: "Title", type: "STRING"], [name: "XP", type: "NUMBER"], [name: "Coins", type: "NUMBER"], [name: "Reason", type: "STRING"]]
         command "resetProgress"
         command "refreshDashboard"
     }
@@ -47,13 +48,8 @@ metadata {
     }
 }
 
-def installed() {
-    initialize()
-}
-
-def updated() {
-    initialize()
-}
+def installed() { initialize() }
+def updated() { initialize() }
 
 def initialize() {
     if (state.xp == null) state.xp = 0
@@ -65,16 +61,12 @@ def initialize() {
     if (state.heroName == null) state.heroName = device.label ?: device.name ?: "Hero"
     if (state.heroIcon == null) state.heroIcon = "🦸"
     if (state.heroColor == null) state.heroColor = "blue"
+    if (state.activityLog == null) state.activityLog = []
     updateAllAttributes()
 }
 
-def refresh() {
-    updateAllAttributes()
-}
-
-def refreshDashboard() {
-    updateAllAttributes()
-}
+def refresh() { updateAllAttributes() }
+def refreshDashboard() { updateAllAttributes() }
 
 def setHeroName(String name) {
     if (name?.trim()) state.heroName = name.trim()
@@ -148,6 +140,30 @@ def setCurrentStreak(Number days) {
     updateAllAttributes()
 }
 
+def addActivity(String type, String title, Number xp, Number coins, String reason) {
+    String cleanType = type?.trim()?.toLowerCase() ?: "activity"
+    String cleanTitle = title?.trim() ?: "Activity"
+    String cleanReason = reason?.trim() ?: cleanTitle
+
+    if (state.activityLog == null || !(state.activityLog instanceof List)) state.activityLog = []
+
+    state.activityLog << [
+        timestamp: new Date().format("yyyy-MM-dd HH:mm:ss"),
+        type: cleanType,
+        title: cleanTitle,
+        xp: numberValue(xp),
+        coins: numberValue(coins),
+        reason: cleanReason
+    ]
+
+    // Keep the log useful without allowing it to grow forever.
+    if (state.activityLog.size() > 100) {
+        state.activityLog = state.activityLog.takeRight(100)
+    }
+
+    updateAllAttributes()
+}
+
 def resetProgress() {
     state.xp = 0
     state.coins = 0
@@ -155,6 +171,7 @@ def resetProgress() {
     state.pendingApprovals = 0
     state.completedToday = 0
     state.currentStreak = 0
+    state.activityLog = []
     updateAllAttributes()
     logWarn("${getHeroName()} progress reset.")
 }
@@ -194,16 +211,39 @@ def updateAllAttributes() {
         pendingApprovals: numberValue(state.pendingApprovals),
         completedToday: numberValue(state.completedToday),
         currentStreak: numberValue(state.currentStreak),
-        status: calculateStatus()
+        status: calculateStatus(),
+        activityLog: recentActivities(12),
+        todaySummary: todayActivitySummary()
     ]
 
     sendEvent(name: "heroSummary", value: "${summary.icon} ${summary.name} • Level ${summary.level} • ${summary.coins} coins • ${summary.xp} XP")
     sendEvent(name: "dashboardJson", value: groovy.json.JsonOutput.toJson(summary))
 }
 
-def calculateLevel(Integer xpValue) {
-    return Math.floor(xpValue / 100) + 1
+def recentActivities(Integer limit = 12) {
+    if (!(state.activityLog instanceof List)) return []
+    return state.activityLog.takeRight(limit ?: 12).reverse()
 }
+
+def todayActivitySummary() {
+    String today = new Date().format("yyyy-MM-dd")
+    List entries = (state.activityLog instanceof List) ? state.activityLog.findAll { it.timestamp?.toString()?.startsWith(today) } : []
+
+    Integer goodCount = entries.count { it.type in ["good", "mission"] }
+    Integer badCount = entries.count { it.type == "bad" }
+    Integer xpEarned = entries.sum { numberValue(it.xp) } ?: 0
+    Integer coinChange = entries.sum { numberValue(it.coins) } ?: 0
+
+    [
+        entries: entries.size(),
+        good: goodCount,
+        bad: badCount,
+        xpEarned: xpEarned,
+        coinChange: coinChange
+    ]
+}
+
+def calculateLevel(Integer xpValue) { return Math.floor(xpValue / 100) + 1 }
 
 def calculateRank(Integer level) {
     if (level >= 20) return "Hero Legend"
@@ -222,22 +262,11 @@ def calculateStatus() {
     return "Ready for action"
 }
 
-def getHeroName() {
-    return state.heroName ?: device.label ?: device.name ?: "Hero"
-}
+def getHeroName() { return state.heroName ?: device.label ?: device.name ?: "Hero" }
 
 def numberValue(def value) {
-    try {
-        return value == null ? 0 : value as Integer
-    } catch (Exception e) {
-        return 0
-    }
+    try { return value == null ? 0 : value as Integer } catch (Exception e) { return 0 }
 }
 
-def logInfo(String message) {
-    if (settings.enableLogging != false) log.info "Hero Profile: ${message}"
-}
-
-def logWarn(String message) {
-    log.warn "Hero Profile: ${message}"
-}
+def logInfo(String message) { if (settings.enableLogging != false) log.info "Hero Profile: ${message}" }
+def logWarn(String message) { log.warn "Hero Profile: ${message}" }
