@@ -2,15 +2,18 @@ title: Hero Academy
 views:
   - title: Mission Control
     path: hero-academy
+    icon: mdi:shield-star
     type: sections
     max_columns: 3
+    dense_section_placement: true
     sections:
       - type: grid
+        column_span: 3
         cards:
           - type: markdown
             content: |
               # 🦸 HERO ACADEMY
-              ### Mission Control
+              **MISSION CONTROL**
           - type: entity
             entity: sensor.hero_mission_manager_pending_approvals
             name: Parent Approvals
@@ -22,50 +25,15 @@ views:
       - type: grid
         column_span: 3
         cards:
-          - type: custom:mushroom-template-card
-            primary: Zach
-            secondary: >-
-              Level {{ states('sensor.zach_hero_profile_level') }} •
-              {{ states('sensor.zach_hero_profile_xp') }} XP •
-              {{ states('sensor.zach_hero_profile_coins') }} 🪙
-            icon: mdi:shield-star
-            icon_color: red
-            layout: horizontal
-            tap_action:
-              action: none
-          - type: custom:mushroom-template-card
-            primary: Josh
-            secondary: >-
-              Level {{ states('sensor.josh_hero_profile_level') }} •
-              {{ states('sensor.josh_hero_profile_xp') }} XP •
-              {{ states('sensor.josh_hero_profile_coins') }} 🪙
-            icon: mdi:shield-star
-            icon_color: blue
-            layout: horizontal
-            tap_action:
-              action: none
-          - type: custom:mushroom-template-card
-            primary: Charlie
-            secondary: >-
-              Level {{ states('sensor.charlie_hero_profile_level') }} •
-              {{ states('sensor.charlie_hero_profile_xp') }} XP •
-              {{ states('sensor.charlie_hero_profile_coins') }} 🪙
-            icon: mdi:shield-star
-            icon_color: amber
-            layout: horizontal
-            tap_action:
-              action: none
-
-      - type: grid
-        cards:
           - type: vertical-stack
             cards:
               - type: markdown
-                content: "## 🔴 ZACH"
-              - type: entities
+                content: |
+                  ## 🔴 ZACH
+                  **{{ states('sensor.zach_hero_profile_rank') }}**
+              - type: glance
+                columns: 4
                 entities:
-                  - entity: sensor.zach_hero_profile_rank
-                    name: Rank
                   - entity: sensor.zach_hero_profile_level
                     name: Level
                   - entity: sensor.zach_hero_profile_xp
@@ -73,16 +41,7 @@ views:
                   - entity: sensor.zach_hero_profile_coins
                     name: Coins
                   - entity: sensor.zach_hero_profile_completed_today
-                    name: Completed Today
-                  - entity: sensor.zach_hero_profile_pending_approvals
-                    name: Pending Approval
-              - type: markdown
-                content: |
-                  ### Today's Activity
-                  ⭐ Good: {{ states('sensor.zach_hero_profile_today_good') }}  
-                  💥 Bad: {{ states('sensor.zach_hero_profile_today_bad') }}  
-                  ⭐ XP: {{ states('sensor.zach_hero_profile_today_xp_earned') }}  
-                  🪙 Change: {{ states('sensor.zach_hero_profile_today_coin_change') }}
+                    name: Today
               - type: grid
                 columns: 4
                 square: false
@@ -100,7 +59,7 @@ views:
                     icon: mdi:toothbrush
                     entity: button.zach_brush_teeth_pm
                   - type: button
-                    name: Feed Gecko
+                    name: Gecko
                     icon: mdi:ladybug
                     entity: button.zach_feed_gecko
                   - type: button
@@ -123,11 +82,12 @@ views:
           - type: vertical-stack
             cards:
               - type: markdown
-                content: "## 🔵 JOSH"
-              - type: entities
+                content: |
+                  ## 🔵 JOSH
+                  **{{ states('sensor.josh_hero_profile_rank') }}**
+              - type: glance
+                columns: 4
                 entities:
-                  - entity: sensor.josh_hero_profile_rank
-                    name: Rank
                   - entity: sensor.josh_hero_profile_level
                     name: Level
                   - entity: sensor.josh_hero_profile_xp
@@ -135,16 +95,7 @@ views:
                   - entity: sensor.josh_hero_profile_coins
                     name: Coins
                   - entity: sensor.josh_hero_profile_completed_today
-                    name: Completed Today
-                  - entity: sensor.josh_hero_profile_pending_approvals
-                    name: Pending Approval
-              - type: markdown
-                content: |
-                  ### Today's Activity
-                  ⭐ Good: {{ states('sensor.josh_hero_profile_today_good') }}  
-                  💥 Bad: {{ states('sensor.josh_hero_profile_today_bad') }}  
-                  ⭐ XP: {{ states('sensor.josh_hero_profile_today_xp_earned') }}  
-                  🪙 Change: {{ states('sensor.josh_hero_profile_today_coin_change') }}
+                    name: Today
               - type: grid
                 columns: 4
                 square: false
@@ -162,7 +113,7 @@ views:
                     icon: mdi:toothbrush
                     entity: button.josh_brush_teeth_pm
                   - type: button
-                    name: Feed Gecko
+                    name: Gecko
                     icon: mdi:ladybug
                     entity: button.josh_feed_gecko
                   - type: button
@@ -185,11 +136,12 @@ views:
           - type: vertical-stack
             cards:
               - type: markdown
-                content: "## 🟡 CHARLIE"
-              - type: entities
+                content: |
+                  ## 🟡 CHARLIE
+                  **{{ states('sensor.charlie_hero_profile_rank') }}**
+              - type: glance
+                columns: 4
                 entities:
-                  - entity: sensor.charlie_hero_profile_rank
-                    name: Rank
                   - entity: sensor.charlie_hero_profile_level
                     name: Level
                   - entity: sensor.charlie_hero_profile_xp
@@ -197,16 +149,7 @@ views:
                   - entity: sensor.charlie_hero_profile_coins
                     name: Coins
                   - entity: sensor.charlie_hero_profile_completed_today
-                    name: Completed Today
-                  - entity: sensor.charlie_hero_profile_pending_approvals
-                    name: Pending Approval
-              - type: markdown
-                content: |
-                  ### Today's Activity
-                  ⭐ Good: {{ states('sensor.charlie_hero_profile_today_good') }}  
-                  💥 Bad: {{ states('sensor.charlie_hero_profile_today_bad') }}  
-                  ⭐ XP: {{ states('sensor.charlie_hero_profile_today_xp_earned') }}  
-                  🪙 Change: {{ states('sensor.charlie_hero_profile_today_coin_change') }}
+                    name: Today
               - type: grid
                 columns: 4
                 square: false
@@ -224,7 +167,7 @@ views:
                     icon: mdi:toothbrush
                     entity: button.charlie_brush_teeth_pm
                   - type: button
-                    name: Feed Gecko
+                    name: Gecko
                     icon: mdi:ladybug
                     entity: button.charlie_feed_gecko
                   - type: button
@@ -247,49 +190,114 @@ views:
       - type: grid
         column_span: 3
         cards:
-          - type: markdown
-            content: |
-              ## 📜 RECENT ACTIVITY — ZACH
-              {% for i in range(1,13) %}
-              {% set s = states('sensor.zach_hero_profile_activity' ~ i) %}
-              {% if s not in ['unknown','unavailable',''] %}
-              {{ s }}  
-              {% endif %}
-              {% endfor %}
-          - type: markdown
-            content: |
-              ## 📜 RECENT ACTIVITY — JOSH
-              {% for i in range(1,13) %}
-              {% set s = states('sensor.josh_hero_profile_activity' ~ i) %}
-              {% if s not in ['unknown','unavailable',''] %}
-              {{ s }}  
-              {% endif %}
-              {% endfor %}
-          - type: markdown
-            content: |
-              ## 📜 RECENT ACTIVITY — CHARLIE
-              {% for i in range(1,13) %}
-              {% set s = states('sensor.charlie_hero_profile_activity' ~ i) %}
-              {% if s not in ['unknown','unavailable',''] %}
-              {{ s }}  
-              {% endif %}
-              {% endfor %}
+          - type: vertical-stack
+            cards:
+              - type: markdown
+                content: |
+                  ## 📊 TODAY — ZACH
+                  ⭐ Good: **{{ states('sensor.zach_hero_profile_today_good') }}** · 💥 Bad: **{{ states('sensor.zach_hero_profile_today_bad') }}**  
+                  ⭐ XP: **{{ states('sensor.zach_hero_profile_today_xp_earned') }}** · 🪙 Change: **{{ states('sensor.zach_hero_profile_today_coin_change') }}**
+              - type: markdown
+                content: |
+                  ### 📜 Recent Activity
+                  {% for i in range(1,13) %}
+                  {% set raw = states('sensor.zach_hero_profile_activity' ~ i) %}
+                  {% if raw not in ['unknown','unavailable',''] %}
+                  {% set a = raw | from_json %}
+                  {% if a.type == 'bad' %}💥{% else %}⭐{% endif %} **{{ a.title }}** — {{ '%+d' | format(a.xp | int) }} XP / {{ '%+d' | format(a.coins | int) }} 🪙  
+                  {% endif %}
+                  {% endfor %}
+
+          - type: vertical-stack
+            cards:
+              - type: markdown
+                content: |
+                  ## 📊 TODAY — JOSH
+                  ⭐ Good: **{{ states('sensor.josh_hero_profile_today_good') }}** · 💥 Bad: **{{ states('sensor.josh_hero_profile_today_bad') }}**  
+                  ⭐ XP: **{{ states('sensor.josh_hero_profile_today_xp_earned') }}** · 🪙 Change: **{{ states('sensor.josh_hero_profile_today_coin_change') }}**
+              - type: markdown
+                content: |
+                  ### 📜 Recent Activity
+                  {% for i in range(1,13) %}
+                  {% set raw = states('sensor.josh_hero_profile_activity' ~ i) %}
+                  {% if raw not in ['unknown','unavailable',''] %}
+                  {% set a = raw | from_json %}
+                  {% if a.type == 'bad' %}💥{% else %}⭐{% endif %} **{{ a.title }}** — {{ '%+d' | format(a.xp | int) }} XP / {{ '%+d' | format(a.coins | int) }} 🪙  
+                  {% endif %}
+                  {% endfor %}
+
+          - type: vertical-stack
+            cards:
+              - type: markdown
+                content: |
+                  ## 📊 TODAY — CHARLIE
+                  ⭐ Good: **{{ states('sensor.charlie_hero_profile_today_good') }}** · 💥 Bad: **{{ states('sensor.charlie_hero_profile_today_bad') }}**  
+                  ⭐ XP: **{{ states('sensor.charlie_hero_profile_today_xp_earned') }}** · 🪙 Change: **{{ states('sensor.charlie_hero_profile_today_coin_change') }}**
+              - type: markdown
+                content: |
+                  ### 📜 Recent Activity
+                  {% for i in range(1,13) %}
+                  {% set raw = states('sensor.charlie_hero_profile_activity' ~ i) %}
+                  {% if raw not in ['unknown','unavailable',''] %}
+                  {% set a = raw | from_json %}
+                  {% if a.type == 'bad' %}💥{% else %}⭐{% endif %} **{{ a.title }}** — {{ '%+d' | format(a.xp | int) }} XP / {{ '%+d' | format(a.coins | int) }} 🪙  
+                  {% endif %}
+                  {% endfor %}
 
       - type: grid
         column_span: 3
         cards:
-          - type: markdown
-            content: |
-              ## ⚡ PARENT AREA
-              Use the existing Hero Mission Manager commands for quick actions and approvals.
-              
-              **Custom Good/Bad entry** is intentionally kept separate from the mission queue so a parent can record something like:
-              
-              `Zach → Good → Took out trash → 8 XP / 8 Coins`
-          - type: entities
-            title: Approval Queue
-            entities:
-              - entity: sensor.hero_mission_manager_pending_approvals
-                name: Pending Approvals
-              - entity: sensor.hero_mission_manager_status
-                name: Status
+          - type: vertical-stack
+            cards:
+              - type: markdown
+                content: |
+                  ## ⚡ CUSTOM ACTIVITY
+                  Enter a parent-recorded good or bad event. It bypasses the approval queue and is applied immediately.
+              - type: entities
+                entities:
+                  - entity: input_select.hero_custom_child
+                    name: Child
+                  - entity: input_select.hero_custom_type
+                    name: Type
+                  - entity: input_text.hero_custom_description
+                    name: What happened?
+                  - entity: input_number.hero_custom_points
+                    name: Points
+              - type: button
+                name: ADD ACTIVITY
+                icon: mdi:plus-circle
+                tap_action:
+                  action: call-service
+                  service: script.hero_add_custom_activity
+
+          - type: vertical-stack
+            cards:
+              - type: markdown
+                content: |
+                  ## ⏳ APPROVAL QUEUE
+                  **{{ states('sensor.hero_mission_manager_pending_approvals') }}** missions waiting for parent approval.
+              - type: entities
+                entities:
+                  - entity: sensor.hero_mission_manager_pending_approvals
+                    name: Pending
+                  - entity: sensor.hero_mission_manager_status
+                    name: Status
+              - type: markdown
+                content: |
+                  {% for i in range(1,11) %}
+                  {% set raw = states('sensor.hero_mission_manager_pending' ~ i) %}
+                  {% if raw not in ['unknown','unavailable',''] %}
+                  {{ raw }}  
+                  {% endif %}
+                  {% endfor %}
+
+          - type: vertical-stack
+            cards:
+              - type: markdown
+                content: |
+                  ## 🪙 FAMILY SNAPSHOT
+                  | Hero | XP | Coins | Level |
+                  |---|---:|---:|---:|
+                  | 🔴 Zach | {{ states('sensor.zach_hero_profile_xp') }} | {{ states('sensor.zach_hero_profile_coins') }} | {{ states('sensor.zach_hero_profile_level') }} |
+                  | 🔵 Josh | {{ states('sensor.josh_hero_profile_xp') }} | {{ states('sensor.josh_hero_profile_coins') }} | {{ states('sensor.josh_hero_profile_level') }} |
+                  | 🟡 Charlie | {{ states('sensor.charlie_hero_profile_xp') }} | {{ states('sensor.charlie_hero_profile_coins') }} | {{ states('sensor.charlie_hero_profile_level') }} |
