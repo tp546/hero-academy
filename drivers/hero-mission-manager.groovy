@@ -19,6 +19,7 @@ metadata {
         command "approveMission", [[name: "Hero", type: "STRING"], [name: "Mission", type: "STRING"]]
         command "rejectMission", [[name: "Hero", type: "STRING"], [name: "Mission", type: "STRING"]]
         command "quickAction", [[name: "Hero", type: "STRING"], [name: "Action", type: "STRING"]]
+        command "recordActivity", [[name: "Hero", type: "STRING"], [name: "Type", type: "STRING"], [name: "Title", type: "STRING"], [name: "XP", type: "NUMBER"], [name: "Coins", type: "NUMBER"], [name: "Reason", type: "STRING"]]
 
         command "zachCleanUp"
         command "zachBrushTeethAm"
@@ -94,6 +95,20 @@ def rejectMission(String hero, String mission) {
 
 def quickAction(String hero, String action) {
     parent?.quickAction(hero, action)
+}
+
+/**
+ * Direct parent-entered activity. Unlike a mission quickAction, this bypasses
+ * the approval queue and immediately changes the selected hero's XP/coins.
+ */
+def recordActivity(String heroKey, String type, String title, Number xp, Number coins, String reason) {
+    def hero = parent?.getHero(heroKey?.toLowerCase())
+    if (!hero) {
+        log.warn "Hero Mission Manager: hero not found: ${heroKey}"
+        return
+    }
+    hero.recordActivity(type, title, xp, coins, reason)
+    parent?.updateManager()
 }
 
 def approvePending(Integer slot) {
