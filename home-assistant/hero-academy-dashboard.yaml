@@ -1,0 +1,295 @@
+title: Hero Academy
+views:
+  - title: Mission Control
+    path: hero-academy
+    type: sections
+    max_columns: 3
+    sections:
+      - type: grid
+        cards:
+          - type: markdown
+            content: |
+              # 🦸 HERO ACADEMY
+              ### Mission Control
+          - type: entity
+            entity: sensor.hero_mission_manager_pending_approvals
+            name: Parent Approvals
+            icon: mdi:clipboard-check-outline
+          - type: entity
+            entity: sensor.hero_mission_manager_status
+            name: Mission Status
+
+      - type: grid
+        column_span: 3
+        cards:
+          - type: custom:mushroom-template-card
+            primary: Zach
+            secondary: >-
+              Level {{ states('sensor.zach_hero_profile_level') }} •
+              {{ states('sensor.zach_hero_profile_xp') }} XP •
+              {{ states('sensor.zach_hero_profile_coins') }} 🪙
+            icon: mdi:shield-star
+            icon_color: red
+            layout: horizontal
+            tap_action:
+              action: none
+          - type: custom:mushroom-template-card
+            primary: Josh
+            secondary: >-
+              Level {{ states('sensor.josh_hero_profile_level') }} •
+              {{ states('sensor.josh_hero_profile_xp') }} XP •
+              {{ states('sensor.josh_hero_profile_coins') }} 🪙
+            icon: mdi:shield-star
+            icon_color: blue
+            layout: horizontal
+            tap_action:
+              action: none
+          - type: custom:mushroom-template-card
+            primary: Charlie
+            secondary: >-
+              Level {{ states('sensor.charlie_hero_profile_level') }} •
+              {{ states('sensor.charlie_hero_profile_xp') }} XP •
+              {{ states('sensor.charlie_hero_profile_coins') }} 🪙
+            icon: mdi:shield-star
+            icon_color: amber
+            layout: horizontal
+            tap_action:
+              action: none
+
+      - type: grid
+        cards:
+          - type: vertical-stack
+            cards:
+              - type: markdown
+                content: "## 🔴 ZACH"
+              - type: entities
+                entities:
+                  - entity: sensor.zach_hero_profile_rank
+                    name: Rank
+                  - entity: sensor.zach_hero_profile_level
+                    name: Level
+                  - entity: sensor.zach_hero_profile_xp
+                    name: XP
+                  - entity: sensor.zach_hero_profile_coins
+                    name: Coins
+                  - entity: sensor.zach_hero_profile_completed_today
+                    name: Completed Today
+                  - entity: sensor.zach_hero_profile_pending_approvals
+                    name: Pending Approval
+              - type: markdown
+                content: |
+                  ### Today's Activity
+                  ⭐ Good: {{ states('sensor.zach_hero_profile_today_good') }}  
+                  💥 Bad: {{ states('sensor.zach_hero_profile_today_bad') }}  
+                  ⭐ XP: {{ states('sensor.zach_hero_profile_today_xp_earned') }}  
+                  🪙 Change: {{ states('sensor.zach_hero_profile_today_coin_change') }}
+              - type: grid
+                columns: 4
+                square: false
+                cards:
+                  - type: button
+                    name: Clean Up
+                    icon: mdi:broom
+                    entity: button.zach_clean_up
+                  - type: button
+                    name: Teeth AM
+                    icon: mdi:toothbrush
+                    entity: button.zach_brush_teeth_am
+                  - type: button
+                    name: Teeth PM
+                    icon: mdi:toothbrush
+                    entity: button.zach_brush_teeth_pm
+                  - type: button
+                    name: Feed Gecko
+                    icon: mdi:ladybug
+                    entity: button.zach_feed_gecko
+                  - type: button
+                    name: Make Bed
+                    icon: mdi:bed
+                    entity: button.zach_make_bed
+                  - type: button
+                    name: Fighting
+                    icon: mdi:hand-back-right
+                    entity: button.zach_fighting
+                  - type: button
+                    name: Talking Back
+                    icon: mdi:chat-alert
+                    entity: button.zach_talking_back
+                  - type: button
+                    name: Not Listening
+                    icon: mdi:ear-hearing
+                    entity: button.zach_not_listening
+
+          - type: vertical-stack
+            cards:
+              - type: markdown
+                content: "## 🔵 JOSH"
+              - type: entities
+                entities:
+                  - entity: sensor.josh_hero_profile_rank
+                    name: Rank
+                  - entity: sensor.josh_hero_profile_level
+                    name: Level
+                  - entity: sensor.josh_hero_profile_xp
+                    name: XP
+                  - entity: sensor.josh_hero_profile_coins
+                    name: Coins
+                  - entity: sensor.josh_hero_profile_completed_today
+                    name: Completed Today
+                  - entity: sensor.josh_hero_profile_pending_approvals
+                    name: Pending Approval
+              - type: markdown
+                content: |
+                  ### Today's Activity
+                  ⭐ Good: {{ states('sensor.josh_hero_profile_today_good') }}  
+                  💥 Bad: {{ states('sensor.josh_hero_profile_today_bad') }}  
+                  ⭐ XP: {{ states('sensor.josh_hero_profile_today_xp_earned') }}  
+                  🪙 Change: {{ states('sensor.josh_hero_profile_today_coin_change') }}
+              - type: grid
+                columns: 4
+                square: false
+                cards:
+                  - type: button
+                    name: Clean Up
+                    icon: mdi:broom
+                    entity: button.josh_clean_up
+                  - type: button
+                    name: Teeth AM
+                    icon: mdi:toothbrush
+                    entity: button.josh_brush_teeth_am
+                  - type: button
+                    name: Teeth PM
+                    icon: mdi:toothbrush
+                    entity: button.josh_brush_teeth_pm
+                  - type: button
+                    name: Feed Gecko
+                    icon: mdi:ladybug
+                    entity: button.josh_feed_gecko
+                  - type: button
+                    name: Make Bed
+                    icon: mdi:bed
+                    entity: button.josh_make_bed
+                  - type: button
+                    name: Fighting
+                    icon: mdi:hand-back-right
+                    entity: button.josh_fighting
+                  - type: button
+                    name: Talking Back
+                    icon: mdi:chat-alert
+                    entity: button.josh_talking_back
+                  - type: button
+                    name: Not Listening
+                    icon: mdi:ear-hearing
+                    entity: button.josh_not_listening
+
+          - type: vertical-stack
+            cards:
+              - type: markdown
+                content: "## 🟡 CHARLIE"
+              - type: entities
+                entities:
+                  - entity: sensor.charlie_hero_profile_rank
+                    name: Rank
+                  - entity: sensor.charlie_hero_profile_level
+                    name: Level
+                  - entity: sensor.charlie_hero_profile_xp
+                    name: XP
+                  - entity: sensor.charlie_hero_profile_coins
+                    name: Coins
+                  - entity: sensor.charlie_hero_profile_completed_today
+                    name: Completed Today
+                  - entity: sensor.charlie_hero_profile_pending_approvals
+                    name: Pending Approval
+              - type: markdown
+                content: |
+                  ### Today's Activity
+                  ⭐ Good: {{ states('sensor.charlie_hero_profile_today_good') }}  
+                  💥 Bad: {{ states('sensor.charlie_hero_profile_today_bad') }}  
+                  ⭐ XP: {{ states('sensor.charlie_hero_profile_today_xp_earned') }}  
+                  🪙 Change: {{ states('sensor.charlie_hero_profile_today_coin_change') }}
+              - type: grid
+                columns: 4
+                square: false
+                cards:
+                  - type: button
+                    name: Clean Up
+                    icon: mdi:broom
+                    entity: button.charlie_clean_up
+                  - type: button
+                    name: Teeth AM
+                    icon: mdi:toothbrush
+                    entity: button.charlie_brush_teeth_am
+                  - type: button
+                    name: Teeth PM
+                    icon: mdi:toothbrush
+                    entity: button.charlie_brush_teeth_pm
+                  - type: button
+                    name: Feed Gecko
+                    icon: mdi:ladybug
+                    entity: button.charlie_feed_gecko
+                  - type: button
+                    name: Make Bed
+                    icon: mdi:bed
+                    entity: button.charlie_make_bed
+                  - type: button
+                    name: Fighting
+                    icon: mdi:hand-back-right
+                    entity: button.charlie_fighting
+                  - type: button
+                    name: Talking Back
+                    icon: mdi:chat-alert
+                    entity: button.charlie_talking_back
+                  - type: button
+                    name: Not Listening
+                    icon: mdi:ear-hearing
+                    entity: button.charlie_not_listening
+
+      - type: grid
+        column_span: 3
+        cards:
+          - type: markdown
+            content: |
+              ## 📜 RECENT ACTIVITY — ZACH
+              {% for i in range(1,13) %}
+              {% set s = states('sensor.zach_hero_profile_activity' ~ i) %}
+              {% if s not in ['unknown','unavailable',''] %}
+              {{ s }}  
+              {% endif %}
+              {% endfor %}
+          - type: markdown
+            content: |
+              ## 📜 RECENT ACTIVITY — JOSH
+              {% for i in range(1,13) %}
+              {% set s = states('sensor.josh_hero_profile_activity' ~ i) %}
+              {% if s not in ['unknown','unavailable',''] %}
+              {{ s }}  
+              {% endif %}
+              {% endfor %}
+          - type: markdown
+            content: |
+              ## 📜 RECENT ACTIVITY — CHARLIE
+              {% for i in range(1,13) %}
+              {% set s = states('sensor.charlie_hero_profile_activity' ~ i) %}
+              {% if s not in ['unknown','unavailable',''] %}
+              {{ s }}  
+              {% endif %}
+              {% endfor %}
+
+      - type: grid
+        column_span: 3
+        cards:
+          - type: markdown
+            content: |
+              ## ⚡ PARENT AREA
+              Use the existing Hero Mission Manager commands for quick actions and approvals.
+              
+              **Custom Good/Bad entry** is intentionally kept separate from the mission queue so a parent can record something like:
+              
+              `Zach → Good → Took out trash → 8 XP / 8 Coins`
+          - type: entities
+            title: Approval Queue
+            entities:
+              - entity: sensor.hero_mission_manager_pending_approvals
+                name: Pending Approvals
+              - entity: sensor.hero_mission_manager_status
+                name: Status
