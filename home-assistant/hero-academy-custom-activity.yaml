@@ -41,6 +41,13 @@ script:
     alias: Hero Academy — Add Custom Activity
     mode: queued
     max: 10
+    fields:
+      device_id:
+        name: Device ID
+        description: Optional device ID supplied by the dashboard button. The script does not need it because the selected child determines the destination.
+        required: false
+        selector:
+          text:
     sequence:
       - variables:
           child: "{{ states('input_select.hero_custom_child') | lower }}"
