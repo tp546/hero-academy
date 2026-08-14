@@ -141,14 +141,22 @@ def rejectMission(String heroKey, String missionId) {
 
 def applyMission(def hero, Map mission, String heroKey) {
     try {
-        if (mission.xp > 0) hero.awardXp(mission.xp, mission.name)
-        else if (mission.xp < 0) hero.setXp(Math.max(0, numberValue(hero.currentValue("xp")) + mission.xp))
+        Integer appliedXp = numberValue(mission.xp)
+        Integer appliedCoins = numberValue(mission.coins)
 
-        if (mission.coins > 0) hero.awardCoins(mission.coins, mission.name)
-        else if (mission.coins < 0) hero.deductCoins(Math.abs(mission.coins), mission.name)
+        if (appliedXp > 0) hero.awardXp(appliedXp, mission.name)
+        else if (appliedXp < 0) hero.setXp(Math.max(0, numberValue(hero.currentValue("xp")) + appliedXp))
+
+        if (appliedCoins > 0) hero.awardCoins(appliedCoins, mission.name)
+        else if (appliedCoins < 0) hero.deductCoins(Math.abs(appliedCoins), mission.name)
+
+        // Keep every completed/penalized mission in the same activity history
+        // used by the custom parent-entry system and SharpTools dashboard.
+        String activityType = appliedXp < 0 || appliedCoins < 0 ? "bad" : "mission"
+        hero.addActivity(activityType, mission.name, appliedXp, appliedCoins, mission.name)
 
         Integer completed = numberValue(hero.currentValue("completedToday"))
-        if (mission.xp > 0) hero.setCompletedToday(completed + 1)
+        if (appliedXp > 0) hero.setCompletedToday(completed + 1)
 
         syncPendingCounts()
         updateManager()
