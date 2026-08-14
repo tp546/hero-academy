@@ -268,7 +268,9 @@ views:
                 icon: mdi:plus-circle
                 tap_action:
                   action: call-service
-                  service: script.hero_add_custom_activity
+                  service: script.turn_on
+                  target:
+                    entity_id: script.hero_add_custom_activity
 
           - type: vertical-stack
             cards:
